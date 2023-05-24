@@ -5,8 +5,10 @@ import './App.css'
 function App() {
   const [count, setCount] = useState(0);
   var dataList=[];
-  const [IP,setIP]=useState("192.168.4.1")
+  const [IP,setIP]=useState("http://192.168.4.1")
   const [fdata, setData] = useState({status:"No Connection"});
+  const[motor,setMotor]=useState(0);
+  const [gather, setgather] = useState(false);
   const toCsv = function (table) {
     // Query all rows
     const rows = table.querySelectorAll('tr');
@@ -40,30 +42,40 @@ const download = function (text, fileName) {
 
   document.body.removeChild(link);
 };
-  function getData (cmd){
-            fetch("https://the-trivia-api.com/v2/questions?limit=1").then((res=>res.json())).then(data=>{
-              console.log(dataList.length);
-              dataList.push(data[0]);
-              document.getElementById("datatable").innerHTML+='<tr><td>'+data[0]["question"]["text"]+'</td><td>'+ data[0]["correctAnswer"]+'</td></tr>'});
-            
-            // set state when the data received
-        
-  };
+
   return (
     <>
       <input id="ip"/> <br></br>
-      <button onClick={()=>{getData("/checkConnection")}}> Check Data</button>
+      <button onClick={()=>{
+        fetch(IP+"/checkConnection").then((res=>{console.log(res); return res.json();})).then(data=>{
+          console.log(data);
+          setData(data[0]);
+        });
+      }}> Check Data</button>
+      <button onClick={()=>{
+      fetch(IP+"/turnMotor").then((res=>{console.log(res); return res.json();})).then(data=>{
+          console.log(data);
+          setMotor(data[0]["motor"]);
+        });
+      }
+      }>
+        Turn {motor==0?"on":"off"} motor
+      </button>
+      <br/>
+      <button disabled={fdata.status=="No Connection"?true:false}>
+        {gather?"Stop":"Start"} Gathering
+      </button><br/>
+      Connection Status:{fdata.status}<br/>
+      Motor Status:{motor}
+      <table id="datatable">
+        <tr><th>Row</th><th>Time</th><th>Altitude</th><th>Distance</th><th>Angle</th></tr>
+      </table>
       <button onClick={()=>{
          const csv = toCsv(document.getElementById('datatable'));
 
          // Download it
          download(csv, 'download.csv');
       }}>Export HTML Table To CSV File</button>
-      {dataList.length}
-      <table id="datatable">
-        <tr><th>R1</th><th>r2</th></tr>
-      </table>
-      
       </>
   );
 }
